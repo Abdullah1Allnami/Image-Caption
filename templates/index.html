@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Show and Tell | Image Captioner</title>
+    <!-- Outfit & Plus Jakarta Sans Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js for interactive loss chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #0A0E1A;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #FFFFFF;
+            --text-secondary: #8E9AA8;
+            --accent-purple: #8258E5;
+            --accent-blue: #358DFF;
+            --accent-gradient: linear-gradient(135deg, #FF6B6B, #8258E5, #358DFF);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            overflow-x: hidden;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        header h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.8rem;
+            font-weight: 800;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 300;
+        }
+
+        .main-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed rgba(130, 88, 229, 0.3);
+            border-radius: 16px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(130, 88, 229, 0.02);
+            position: relative;
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            border-color: var(--accent-purple);
+            background: rgba(130, 88, 229, 0.06);
+            transform: translateY(-2px);
+        }
+
+        .upload-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+
+        .upload-area:hover .upload-icon {
+            transform: scale(1.1);
+        }
+
+        .upload-area input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .upload-text h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.3rem;
+            font-weight: 600;
+        }
+
+        .upload-text p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Controls Row */
+        .controls-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            padding-top: 1.5rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .control-group label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .control-group select, .control-group input {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            outline: none;
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: border-color 0.2s ease;
+        }
+
+        .control-group select:focus, .control-group input:focus {
+            border-color: var(--accent-purple);
+        }
+
+        /* Preview and Result Section */
+        .result-section {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .result-section {
+                grid-template-columns: 1fr 1.2fr;
+            }
+        }
+
+        .preview-box {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            aspect-ratio: 4/3;
+        }
+
+        .preview-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .captions-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            justify-content: center;
+        }
+
+        .caption-card {
+            background: rgba(255, 255, 255, 0.02);
+            border-left: 4px solid var(--accent-purple);
+            border-radius: 8px;
+            padding: 1.2rem 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.4s ease;
+        }
+
+        .caption-card.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .caption-card.beam {
+            border-left-color: var(--accent-blue);
+        }
+
+        .caption-header {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 0.4rem;
+            font-weight: 700;
+        }
+
+        .caption-content {
+            font-size: 1.15rem;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        /* Spinner / Loading Animation */
+        .loader {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(130, 88, 229, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--accent-purple);
+            animation: spin 1s ease-in-out infinite;
+            margin: 2rem auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Tab Navigation */
+        .tab-nav {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            background: rgba(130, 88, 229, 0.08);
+            color: var(--text-primary);
+            border-color: rgba(130, 88, 229, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, rgba(130, 88, 229, 0.2), rgba(53, 141, 255, 0.2));
+            color: var(--text-primary);
+            border-color: var(--accent-purple);
+            box-shadow: 0 4px 12px rgba(130, 88, 229, 0.2);
+        }
+
+        /* Tab Content Visibility */
+        .tab-content {
+            display: none;
+            width: 100%;
+        }
+
+        .tab-content.active-content {
+            display: block;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Demo Grid */
+        .demo-section {
+            border-top: 1px solid var(--border-color);
+            padding-top: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        @media (min-width: 576px) {
+            .demo-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (min-width: 992px) {
+            .demo-grid {
+                grid-template-columns: repeat(6, 1fr);
+            }
+        }
+
+        .demo-item {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            aspect-ratio: 1;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .demo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .demo-item:hover {
+            border-color: var(--accent-purple);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(130, 88, 229, 0.2);
+        }
+
+        .demo-item:hover img {
+            transform: scale(1.05);
+        }
+
+        .demo-item .demo-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 14, 26, 0.8);
+            font-size: 0.75rem;
+            padding: 0.25rem;
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Metrics grid for stats */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .metric-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--accent-purple);
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 350px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1rem;
+        }
+
+        .no-stats-info {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 3rem 1rem;
+            font-size: 1.1rem;
+        }
+
+        /* Vocab styles */
+        .vocab-header, .stats-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .vocab-header h3, .stats-header h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .vocab-header p, .stats-header p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .vocab-search-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .vocab-search-row input {
+            flex: 1;
+            min-width: 250px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            outline: none;
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: border-color 0.2s ease;
+        }
+
+        .vocab-search-row input:focus {
+            border-color: var(--accent-purple);
+        }
+
+        .vocab-meta {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .special-tokens-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .special-token-badge {
+            background: linear-gradient(135deg, rgba(130, 88, 229, 0.1), rgba(53, 141, 255, 0.1));
+            border: 1px solid rgba(130, 88, 229, 0.2);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .special-token-label {
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .special-token-val {
+            color: var(--accent-blue);
+            font-family: monospace;
+            font-weight: 700;
+        }
+
+        .vocab-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        @media (min-width: 576px) {
+            .vocab-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (min-width: 992px) {
+            .vocab-grid {
+                grid-template-columns: repeat(6, 1fr);
+            }
+        }
+
+        /* Custom Scrollbar */
+        .vocab-grid::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .vocab-grid::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 3px;
+        }
+
+        .vocab-grid::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .vocab-grid::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-purple);
+        }
+
+        .vocab-word-item {
+            font-size: 0.85rem;
+            padding: 0.4rem 0.6rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .vocab-word-index {
+            color: var(--text-secondary);
+            font-family: monospace;
+        }
+
+        .vocab-word-text {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Show & Tell Captioner</h1>
+            <p>Neural Image Captioning Platform using PyTorch</p>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <div class="tab-nav">
+            <button class="tab-btn active" data-tab="generator">🖼️ Caption Generator</button>
+            <button class="tab-btn" data-tab="stats">📊 Training Stats</button>
+            <button class="tab-btn" data-tab="vocab">🔍 Vocabulary Explorer</button>
+        </div>
+
+        <!-- Tab 1: Caption Generator -->
+        <div id="generatorTab" class="tab-content active-content">
+            <div class="main-card">
+                <!-- Upload Area -->
+                <div class="upload-area" id="uploadArea">
+                    <span class="upload-icon">📸</span>
+                    <div class="upload-text">
+                        <h3>Drag & Drop Image Here</h3>
+                        <p>Supports JPG, JPEG, or PNG formats</p>
+                    </div>
+                    <input type="file" id="fileInput" accept="image/*">
+                </div>
+
+                <!-- Parameters Panel -->
+                <div class="controls-row">
+                    <div class="control-group">
+                        <label for="beamWidth">Beam Width</label>
+                        <select id="beamWidth">
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="maxLength">Max Length</label>
+                        <input type="number" id="maxLength" min="5" max="50" value="20">
+                    </div>
+                </div>
+
+                <!-- Loading Spinner -->
+                <div class="loader" id="loader"></div>
+
+                <!-- Output/Preview Grid -->
+                <div class="result-section" id="resultSection" style="display: none;">
+                    <div class="preview-box">
+                        <img id="imagePreview" src="" alt="Preview">
+                    </div>
+                    <div class="captions-container">
+                        <!-- Greedy Card -->
+                        <div class="caption-card" id="greedyCard">
+                            <div class="caption-header">Greedy Decoding</div>
+                            <div class="caption-content" id="greedyText">Generating...</div>
+                        </div>
+                        <!-- Beam Card -->
+                        <div class="caption-card beam" id="beamCard">
+                            <div class="caption-header" id="beamHeader">Beam Search (Width 3)</div>
+                            <div class="caption-content" id="beamText">Generating...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Demo Images Selector Section -->
+                <div class="demo-section" id="demoSection" style="display: none;">
+                    <h3 class="section-title">Pick a Demo Image from Flickr8k</h3>
+                    <div class="demo-grid" id="demoGrid"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Training Stats -->
+        <div id="statsTab" class="tab-content">
+            <div class="main-card">
+                <div class="stats-header">
+                    <h3>Training & Validation Loss Curves</h3>
+                    <p>Performance history across training epochs</p>
+                </div>
+                
+                <div id="statsContainer">
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-value" id="epochsMetric">-</div>
+                            <div class="metric-label">Total Epochs Trained</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="trainLossMetric">-</div>
+                            <div class="metric-label">Final Train Loss</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="valLossMetric">-</div>
+                            <div class="metric-label">Final Val Loss</div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="lossChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="no-stats-info" id="noStatsInfo" style="display: none;">
+                    No training history found. Build and run the train.py script to generate training stats.
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Vocabulary Explorer -->
+        <div id="vocabTab" class="tab-content">
+            <div class="main-card">
+                <div class="vocab-header">
+                    <h3>Vocabulary Explorer</h3>
+                    <p>Browse and search words in the vocabulary</p>
+                </div>
+                <div class="vocab-search-row">
+                    <input type="text" id="vocabSearchInput" placeholder="Search word in vocabulary...">
+                    <div class="vocab-meta" id="vocabCount">Showing 0 of 0 words</div>
+                </div>
+                <div class="special-tokens-row" id="specialTokensRow">
+                    <!-- Special tokens will be injected here -->
+                </div>
+                <div class="vocab-grid" id="vocabGrid">
+                    <!-- Words will be injected here -->
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            Show and Tell CNN-LSTM Image Captioning Project
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
