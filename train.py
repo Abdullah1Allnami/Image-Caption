@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 import json
 from tqdm import tqdm
 
-from dataset import build_vocab, get_loader, Vocabulary, Flickr8kDataset
-from model import ShowAttendAndTell
+from src.dataset import build_vocab, get_loader, Vocabulary, Flickr8kDataset
+from src.model import ShowAttendAndTell
 
 def train_model():
     # 1. Hyperparameters & Paths

@@ -4,9 +4,9 @@ import torch
 from flask import Flask, request, jsonify, render_template, send_from_directory
 from PIL import Image
 from torchvision import transforms
-from dataset import Vocabulary
-from model import ShowAndTell, ShowAttendAndTell
-from inference import greedy_search, beam_search, greedy_search_attention, beam_search_attention
+from src.dataset import Vocabulary
+from src.model import ShowAndTell, ShowAttendAndTell
+from src.inference import greedy_search, beam_search, greedy_search_attention, beam_search_attention
 
 app = Flask(__name__)
 
@@ -106,7 +106,7 @@ def get_caption():
 
 @app.route('/api/demo-images')
 def get_demo_images():
-    demo_dir = os.path.join(PROJECT_DIR, "data", "Flicker8k_Dataset")
+    demo_dir = os.path.join(PROJECT_DIR, "data", "Flickr30k_Demo")
     if os.path.exists(demo_dir):
         try:
             files = sorted([f for f in os.listdir(demo_dir) if f.lower().endswith(('.jpg', '.jpeg', '.png'))])[:12]
@@ -120,7 +120,7 @@ def get_demo_images():
 
 @app.route('/api/demo-image/<filename>')
 def get_demo_image_file(filename):
-    demo_dir = os.path.join(PROJECT_DIR, "data", "Flicker8k_Dataset")
+    demo_dir = os.path.join(PROJECT_DIR, "data", "Flickr30k_Demo")
     return send_from_directory(demo_dir, filename)
 
 @app.route('/api/history')
@@ -156,5 +156,5 @@ def get_vocab():
     })
 
 if __name__ == '__main__':
-    print("Starting flask server on http://127.0.0.1:5003")
+    print("Starting flask server on http://127.0.0.1:5004")
     app.run(host='127.0.0.1', port=5004, debug=True)

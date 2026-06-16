@@ -6,9 +6,9 @@ from tqdm import tqdm
 import nltk
 from nltk.translate.bleu_score import corpus_bleu
 
-from dataset import Vocabulary, Flickr8kDataset
-from model import ShowAndTell, ShowAttendAndTell
-from inference import greedy_search, beam_search, greedy_search_attention, beam_search_attention
+from src.dataset import Vocabulary, Flickr8kDataset
+from src.model import ShowAndTell, ShowAttendAndTell
+from src.inference import greedy_search, beam_search, greedy_search_attention, beam_search_attention
 
 def evaluate_model():
     device = torch.device("mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu")
