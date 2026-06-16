@@ -1,4 +1,4 @@
-# ✨ Show & Tell: Neural Image Captioning 📸
+# ✨ Show Attend and Tell: Neural Image Captioning 📸
 
 [![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12-blue?logo=python&logoColor=white)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
