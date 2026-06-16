@@ -1,4 +1,4 @@
-# ✨ Show & Tell: Neural Image Captioning Platform 📸
+# ✨ Show & Tell: Neural Image Captioning 📸
 
 [![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12-blue?logo=python&logoColor=white)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Device Support](https://img.shields.io/badge/Device-CUDA%20%7C%20MPS%20%7C%20CPU-green)](#device-compatibility)
 
-A premium, state-of-the-art deep learning platform that generates natural language descriptions for images. This project implements two advanced neural architectures—**Show & Tell** (CNN-LSTM) and **Show, Attend & Tell** (CNN-LSTM with Bahdanau Visual Attention)—trained on the **Flickr8k** and **Flickr30k** datasets. It includes an interactive, glassmorphic web interface for real-time model inference and training diagnostics.
+A Deep learning Project that generates natural language descriptions for images. This project implements two advanced architectures—**Show & Tell** (CNN-LSTM) and **Show, Attend & Tell** (CNN-LSTM with Bahdanau Visual Attention)—trained on the **Flickr8k** and **Flickr30k** datasets. It includes an interactive web interface for real-time model inference and training diagnostics.
 
 ---
 
