@@ -4,7 +4,7 @@ from torchvision import transforms
 from PIL import Image
 
 from dataset import Vocabulary
-from model import ShowAndTell
+from model import ShowAndTell, ShowAttendAndTell
 
 def greedy_search(model, image_tensor, vocab, max_length=20, device="cpu"):
     """Generate caption using Greedy Search."""
@@ -259,13 +259,21 @@ def load_model_and_predict(image_path, checkpoint_path, vocab_path, beam_width=3
     # Load checkpoint
     checkpoint = torch.load(checkpoint_path, map_location=device)
     
-    # Initialize model
-    model = ShowAndTell(
-        embed_size=checkpoint["embed_size"],
-        hidden_size=checkpoint["hidden_size"],
-        vocab_size=checkpoint["vocab_size"],
-        num_layers=checkpoint["num_layers"]
-    ).to(device)
+    # Initialize model dynamically
+    if "attention_dim" in checkpoint:
+        model = ShowAttendAndTell(
+            embed_size=checkpoint["embed_size"],
+            hidden_size=checkpoint["hidden_size"],
+            vocab_size=checkpoint["vocab_size"],
+            attention_dim=checkpoint["attention_dim"]
+        ).to(device)
+    else:
+        model = ShowAndTell(
+            embed_size=checkpoint["embed_size"],
+            hidden_size=checkpoint["hidden_size"],
+            vocab_size=checkpoint["vocab_size"],
+            num_layers=checkpoint["num_layers"]
+        ).to(device)
     
     model.load_state_dict(checkpoint["model_state_dict"])
     model.eval()
@@ -280,9 +288,13 @@ def load_model_and_predict(image_path, checkpoint_path, vocab_path, beam_width=3
     img = Image.open(image_path).convert("RGB")
     img_tensor = transform(img).unsqueeze(0) # add batch dim
     
-    # Predict
-    greedy_caption = greedy_search(model, img_tensor, vocab, device=device)
-    beam_caption = beam_search(model, img_tensor, vocab, beam_width=beam_width, device=device)
+    # Predict based on model type
+    if "attention_dim" in checkpoint:
+        greedy_caption = greedy_search_attention(model, img_tensor, vocab, device=device)
+        beam_caption = beam_search_attention(model, img_tensor, vocab, beam_width=beam_width, device=device)
+    else:
+        greedy_caption = greedy_search(model, img_tensor, vocab, device=device)
+        beam_caption = beam_search(model, img_tensor, vocab, beam_width=beam_width, device=device)
     
     return greedy_caption, beam_caption
 

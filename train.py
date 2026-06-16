@@ -8,7 +8,7 @@ import json
 from tqdm import tqdm
 
 from dataset import build_vocab, get_loader, Vocabulary, Flickr8kDataset
-from model import ShowAndTell
+from model import ShowAttendAndTell
 
 def train_model():
     # 1. Hyperparameters & Paths
@@ -115,11 +115,11 @@ def train_model():
         print(f"Programmatic split created: Train={len(train_set)}, Val={len(val_set)}")
 
     # 5. Initialize Model, Loss, and Optimizer
-    model = ShowAndTell(
+    model = ShowAttendAndTell(
         embed_size=embed_size,
         hidden_size=hidden_size,
         vocab_size=vocab_size,
-        num_layers=num_layers,
+        attention_dim=256,
         train_cnn=False  # Keep ResNet weights frozen
     ).to(device)
     
@@ -197,7 +197,7 @@ def train_model():
             "embed_size": embed_size,
             "hidden_size": hidden_size,
             "vocab_size": vocab_size,
-            "num_layers": num_layers
+            "attention_dim": 256
         }
         
         # Save latest checkpoint

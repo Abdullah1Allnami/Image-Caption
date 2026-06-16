@@ -5,8 +5,8 @@ from flask import Flask, request, jsonify, render_template, send_from_directory
 from PIL import Image
 from torchvision import transforms
 from dataset import Vocabulary
-from model import ShowAndTell
-from inference import greedy_search, beam_search
+from model import ShowAndTell, ShowAttendAndTell
+from inference import greedy_search, beam_search, greedy_search_attention, beam_search_attention
 
 app = Flask(__name__)
 
@@ -33,12 +33,20 @@ def get_model():
         vocab = Vocabulary.load(VOCAB_PATH)
         checkpoint = torch.load(CHECKPOINT_PATH, map_location=device)
         
-        model = ShowAndTell(
-            embed_size=checkpoint["embed_size"],
-            hidden_size=checkpoint["hidden_size"],
-            vocab_size=checkpoint["vocab_size"],
-            num_layers=checkpoint["num_layers"]
-        ).to(device)
+        if "attention_dim" in checkpoint:
+            model = ShowAttendAndTell(
+                embed_size=checkpoint["embed_size"],
+                hidden_size=checkpoint["hidden_size"],
+                vocab_size=checkpoint["vocab_size"],
+                attention_dim=checkpoint["attention_dim"]
+            ).to(device)
+        else:
+            model = ShowAndTell(
+                embed_size=checkpoint["embed_size"],
+                hidden_size=checkpoint["hidden_size"],
+                vocab_size=checkpoint["vocab_size"],
+                num_layers=checkpoint["num_layers"]
+            ).to(device)
         model.load_state_dict(checkpoint["model_state_dict"])
         model.eval()
         
@@ -79,8 +87,13 @@ def get_caption():
         max_len = int(request.form.get('max_length', 20))
         
         # Inference
-        greedy_cap = greedy_search(net, img_tensor, voc, max_length=max_len, device=device)
-        beam_cap = beam_search(net, img_tensor, voc, beam_width=beam_w, max_length=max_len, device=device)
+        checkpoint = torch.load(CHECKPOINT_PATH, map_location=device)
+        if "attention_dim" in checkpoint:
+            greedy_cap = greedy_search_attention(net, img_tensor, voc, max_length=max_len, device=device)
+            beam_cap = beam_search_attention(net, img_tensor, voc, beam_width=beam_w, max_length=max_len, device=device)
+        else:
+            greedy_cap = greedy_search(net, img_tensor, voc, max_length=max_len, device=device)
+            beam_cap = beam_search(net, img_tensor, voc, beam_width=beam_w, max_length=max_len, device=device)
         
         return jsonify({
             'success': True,
@@ -144,4 +157,4 @@ def get_vocab():
 
 if __name__ == '__main__':
     print("Starting flask server on http://127.0.0.1:5003")
-    app.run(host='127.0.0.1', port=5003, debug=True)
+    app.run(host='127.0.0.1', port=5004, debug=True)

@@ -207,23 +207,23 @@ document.addEventListener('DOMContentLoaded', () => {
                             {
                                 label: 'Train Loss',
                                 data: history.train_loss,
-                                borderColor: '#8258E5',
-                                backgroundColor: 'rgba(130, 88, 229, 0.05)',
+                                borderColor: '#6366F1',
+                                backgroundColor: 'rgba(99, 102, 241, 0.05)',
                                 tension: 0.2,
                                 fill: true,
                                 borderWidth: 2,
-                                pointBackgroundColor: '#8258E5',
+                                pointBackgroundColor: '#6366F1',
                                 pointHoverRadius: 6
                             },
                             {
                                 label: 'Val Loss',
                                 data: history.val_loss,
-                                borderColor: '#358DFF',
-                                backgroundColor: 'rgba(53, 141, 255, 0.05)',
+                                borderColor: '#06B6D4',
+                                backgroundColor: 'rgba(6, 182, 212, 0.05)',
                                 tension: 0.2,
                                 fill: true,
                                 borderWidth: 2,
-                                pointBackgroundColor: '#358DFF',
+                                pointBackgroundColor: '#06B6D4',
                                 pointHoverRadius: 6
                             }
                         ]
@@ -234,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         plugins: {
                             legend: {
                                 labels: {
-                                    color: '#FFFFFF',
+                                    color: '#94A3B8',
                                     font: { family: 'Plus Jakarta Sans', size: 12 }
                                 }
                             },
@@ -245,14 +245,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         },
                         scales: {
                             x: {
-                                title: { display: true, text: 'Epoch', color: '#8E9AA8' },
-                                grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                                ticks: { color: '#8E9AA8' }
+                                title: { display: true, text: 'Epoch', color: '#94A3B8' },
+                                grid: { color: 'rgba(255, 255, 255, 0.03)' },
+                                ticks: { color: '#64748B' }
                             },
                             y: {
-                                title: { display: true, text: 'Loss', color: '#8E9AA8' },
-                                grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                                ticks: { color: '#8E9AA8' }
+                                title: { display: true, text: 'Loss', color: '#94A3B8' },
+                                grid: { color: 'rgba(255, 255, 255, 0.03)' },
+                                ticks: { color: '#64748B' }
                             }
                         }
                     }

@@ -7,8 +7,8 @@ import nltk
 from nltk.translate.bleu_score import corpus_bleu
 
 from dataset import Vocabulary, Flickr8kDataset
-from model import ShowAndTell
-from inference import greedy_search, beam_search
+from model import ShowAndTell, ShowAttendAndTell
+from inference import greedy_search, beam_search, greedy_search_attention, beam_search_attention
 
 def evaluate_model():
     device = torch.device("mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu")
@@ -34,12 +34,20 @@ def evaluate_model():
     vocab = Vocabulary.load(vocab_path)
     checkpoint = torch.load(checkpoint_path, map_location=device)
     
-    model = ShowAndTell(
-        embed_size=checkpoint["embed_size"],
-        hidden_size=checkpoint["hidden_size"],
-        vocab_size=checkpoint["vocab_size"],
-        num_layers=checkpoint["num_layers"]
-    ).to(device)
+    if "attention_dim" in checkpoint:
+        model = ShowAttendAndTell(
+            embed_size=checkpoint["embed_size"],
+            hidden_size=checkpoint["hidden_size"],
+            vocab_size=checkpoint["vocab_size"],
+            attention_dim=checkpoint["attention_dim"]
+        ).to(device)
+    else:
+        model = ShowAndTell(
+            embed_size=checkpoint["embed_size"],
+            hidden_size=checkpoint["hidden_size"],
+            vocab_size=checkpoint["vocab_size"],
+            num_layers=checkpoint["num_layers"]
+        ).to(device)
     
     model.load_state_dict(checkpoint["model_state_dict"])
     model.eval()
@@ -95,8 +103,12 @@ def evaluate_model():
         img_tensor = transform(img).unsqueeze(0).to(device)
         
         # Generate captions
-        greedy_cap = greedy_search(model, img_tensor, vocab, device=device)
-        beam_cap = beam_search(model, img_tensor, vocab, beam_width=3, device=device)
+        if "attention_dim" in checkpoint:
+            greedy_cap = greedy_search_attention(model, img_tensor, vocab, device=device)
+            beam_cap = beam_search_attention(model, img_tensor, vocab, beam_width=3, device=device)
+        else:
+            greedy_cap = greedy_search(model, img_tensor, vocab, device=device)
+            beam_cap = beam_search(model, img_tensor, vocab, beam_width=3, device=device)
         
         # Tokenize predictions
         hyp_greedy_tokens = nltk.word_tokenize(greedy_cap.lower())
