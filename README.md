@@ -39,25 +39,6 @@ Experience the platform in action! The recording below demonstrates the interact
 
 The platform supports two distinct deep learning architectures for image captioning:
 
-```mermaid
-graph TD
-    A[Input Image: 224x224] --> B(ResNet-50 Encoder)
-    
-    subgraph Architecture 1: Show & Tell
-        B -->|Average Pooled Feature Vector| C(FC Embed Layer)
-        C -->|Image Feature Token| D(LSTM Decoder)
-        D -->|Teacher Forcing / Greedy / Beam| E(Softmax Output)
-    end
-    
-    subgraph Architecture 2: Show, Attend & Tell
-        B -->|Spatial Feature Map: 14x14x2048| F(Attention Module)
-        G(Decoder LSTM Cell) -->|Previous Hidden State| F
-        F -->|Bahdanau Dynamic Context Vector| G
-        G -->|Token Prediction| H(FC Layer)
-        H -->|Softmax Word Logits| I(Output Words)
-    end
-```
-
 ### 1. Show & Tell (Vanilla CNN-LSTM)
 * **Encoder**: Pre-trained ResNet-50 (with convolutional weights frozen) extracts a 2048-dimensional feature vector, projected to `embed_size` via a Linear Layer + Batch Normalization.
 * **Decoder**: A standard PyTorch LSTM. The image embedding is concatenated as the very first token in the sequence step, followed by word embeddings.
